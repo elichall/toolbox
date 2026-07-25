@@ -119,9 +119,27 @@ sync_repo() {
 
 # ── Step 6: Build and activate ──────────────────────────────────────────────
 
+backup_existing_files() {
+  local files=(
+    "$HOME/.profile"
+    "$HOME/.bashrc"
+    "$HOME/.bash_profile"
+    "$HOME/.zshenv"
+  )
+
+  for f in "${files[@]}"; do
+    if [ -f "$f" ] && ! [ -L "$f" ]; then
+      info "Backing up existing $f → ${f}.backup"
+      mv "$f" "${f}.backup"
+    fi
+  done
+}
+
 build_and_activate() {
   local host="$1"
   local target="homeConfigurations.elichall@${host}.activationPackage"
+
+  backup_existing_files
 
   info "Building $target..."
   nix build ".#${target}" --no-link --print-out-paths

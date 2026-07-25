@@ -31,7 +31,7 @@ source ~/.bashrc
 
 ### WSL extras
 
-For Windows clipboard integration (yazi, tmux paste):
+For Windows clipboard integration (yazi, tmux paste), install `win32yank` manually — it's not available in nixpkgs:
 
 ```bash
 curl -sLo /tmp/win32yank.zip https://github.com/equalsraf/win32yank/releases/download/v0.0.4/win32yank-x64.zip
