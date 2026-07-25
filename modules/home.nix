@@ -42,7 +42,7 @@
         ]
 
         # nvim dependancy
-        [ pkgs.tree-sitter ]
+        [ pkgs.tree-sitter pkgs.gcc ]
 
         # Fonts
         [

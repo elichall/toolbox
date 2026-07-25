@@ -84,7 +84,39 @@ ensure_unzip() {
   ok "unzip installed"
 }
 
-# ── Step 4: Install win32yank (WSL only) ────────────────────────────────────
+# ── Step 4b: Install fonts for Windows Terminal (WSL only) ─────────────────
+
+install_windows_fonts() {
+  info "Installing fonts for Windows Terminal..."
+
+  local font_dir="$HOME/.nix-profile/share/fonts"
+  local win_font_dir="/mnt/c/Users/$USER/AppData/Local/Microsoft/Windows/Fonts"
+
+  if [ ! -d "$font_dir" ]; then
+    warn "No fonts found in $font_dir — skipping"
+    return
+  fi
+
+  mkdir -p "$win_font_dir"
+
+  local count=0
+  while IFS= read -r -d '' font; do
+    local name
+    name="$(basename "$font")"
+    if [ ! -f "$win_font_dir/$name" ]; then
+      cp "$font" "$win_font_dir/$name"
+      count=$((count + 1))
+    fi
+  done < <(find "$font_dir" -type f \( -name '*.ttf' -o -name '*.otf' \) -print0 2>/dev/null)
+
+  if [ "$count" -gt 0 ]; then
+    ok "Copied $count font(s) to Windows"
+  else
+    ok "Windows fonts already up to date"
+  fi
+}
+
+# ── Step 4c: Install win32yank (WSL only) ────────────────────────────────────
 
 install_win32yank() {
   if command -v win32yank &>/dev/null; then
@@ -180,6 +212,10 @@ main() {
   cd "$REPO_DIR"
 
   build_and_activate "$host"
+
+  if [ "$host" = "wsl" ]; then
+    install_windows_fonts
+  fi
 
   echo
   ok "Done. Restart your shell or run: source ~/.bashrc"
