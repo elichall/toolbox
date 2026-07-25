@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_URL="git@github.com:elichall/toolbox.git"
-REPO_DIR="$HOME/toolbox"
+REPO_DIR="$HOME/.toolbox"
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -64,7 +64,27 @@ enable_flakes() {
   ok "Flakes enabled"
 }
 
-# ── Step 3: Install win32yank (WSL only) ────────────────────────────────────
+# ── Step 3: Install unzip ───────────────────────────────────────────────────
+
+ensure_unzip() {
+  if command -v unzip &>/dev/null; then
+    ok "unzip already installed"
+    return
+  fi
+
+  info "Installing unzip..."
+  if command -v apt &>/dev/null; then
+    sudo apt-get update -qq && sudo apt-get install -y -qq unzip
+  elif command -v brew &>/dev/null; then
+    brew install unzip
+  else
+    warn "Cannot install unzip automatically. Install it manually."
+    exit 1
+  fi
+  ok "unzip installed"
+}
+
+# ── Step 4: Install win32yank (WSL only) ────────────────────────────────────
 
 install_win32yank() {
   if command -v win32yank &>/dev/null; then
@@ -83,7 +103,7 @@ install_win32yank() {
   ok "win32yank installed"
 }
 
-# ── Step 4: Clone or update repo ────────────────────────────────────────────
+# ── Step 5: Clone or update repo ────────────────────────────────────────────
 
 sync_repo() {
   if [ -d "$REPO_DIR/.git" ]; then
@@ -97,7 +117,7 @@ sync_repo() {
   fi
 }
 
-# ── Step 5: Build and activate ──────────────────────────────────────────────
+# ── Step 6: Build and activate ──────────────────────────────────────────────
 
 build_and_activate() {
   local host="$1"
@@ -131,6 +151,8 @@ main() {
 
   install_nix
   enable_flakes
+
+  ensure_unzip
 
   if [ "$host" = "wsl" ]; then
     install_win32yank
