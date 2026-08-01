@@ -8,7 +8,6 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
-    clipboard-yazi.url = "github:XYenon/clipboard.yazi";
   };
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
 }

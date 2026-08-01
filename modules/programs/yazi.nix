@@ -1,7 +1,6 @@
 { ... }: {
   flake.homeModules.yazi =
     {
-      inputs,
       toolbox,
       pkgs,
       lib,
@@ -28,7 +27,14 @@
 
       home.packages = [ pkgs.ripdrag ];
 
-      xdg.configFile."yazi/plugins/clipboard.yazi".source = inputs.clipboard-yazi;
+      xdg.configFile."yazi/init.lua" = {
+        force = true;
+        text = ''
+          require("session"):setup {
+            sync_yanked = true,
+          }
+        '';
+      };
 
       xdg.configFile."yazi/keymap.toml" = {
         force = true;
@@ -40,13 +46,13 @@
 
           [[mgr.prepend_keymap]]
           on = "y"
-          run = [ "yank", 'plugin clipboard -- --action=copy' ]
-          desc = "Yank to Clipboard"
+          run = "yank"
+          desc = "Yank the selected files"
 
           [[mgr.prepend_keymap]]
           on = "x"
-          run = [ "yank --cut", 'plugin clipboard -- --action=copy' ]
-          desc = "Cut to Clipboard"
+          run = "yank --cut"
+          desc = "Cut the selected files"
 
           [[mgr.prepend_keymap]]
           on = "p"
