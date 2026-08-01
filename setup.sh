@@ -86,11 +86,31 @@ ensure_unzip() {
 
 # ── Step 4b: Install fonts for Windows Terminal (WSL only) ─────────────────
 
+# Resolve the Windows user profile directory. WSL has no env var exposing the
+# Windows username (WSL username != Windows username), so query it through the
+# Windows interop layer: %USERPROFILE% -> wslpath -> /mnt/c/Users/<winuser>.
+# Falls back to assuming the WSL username matches if interop is unavailable.
+resolve_win_home() {
+  local profile=""
+  if command -v cmd.exe &>/dev/null && command -v wslpath &>/dev/null; then
+    profile="$(cmd.exe /c 'echo %USERPROFILE%' 2>/dev/null | tr -d '\r' || true)"
+    profile="$(wslpath "$profile" 2>/dev/null || true)"
+  fi
+  if [ -n "$profile" ] && [ -d "$profile" ]; then
+    printf '%s' "$profile"
+    return 0
+  fi
+  printf '%s' "/mnt/c/Users/$USER"
+}
+
 install_windows_fonts() {
   info "Installing fonts for Windows Terminal..."
 
   local font_dir="$HOME/.nix-profile/share/fonts"
-  local win_font_dir="/mnt/c/Users/$USER/AppData/Local/Microsoft/Windows/Fonts"
+  local win_home
+  win_home="$(resolve_win_home)"
+  info "Windows user profile: $win_home"
+  local win_font_dir="$win_home/AppData/Local/Microsoft/Windows/Fonts"
 
   if [ ! -d "$font_dir" ]; then
     warn "No fonts found in $font_dir — skipping"
