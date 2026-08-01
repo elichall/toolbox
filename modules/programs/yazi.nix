@@ -50,8 +50,8 @@
 
           [[mgr.prepend_keymap]]
           on = "p"
-          run = [ 'plugin clipboard -- --action=paste', "unyank" ]
-          desc = "Paste from Clipboard"
+          run = "paste"
+          desc = "Paste the yanked files"
         '';
       };
     };
