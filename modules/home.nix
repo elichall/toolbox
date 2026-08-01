@@ -31,6 +31,10 @@
         # conditional packages
         (lib.mkIf (toolbox.displayProvider == "wayland") [ pkgs.wl-clipboard ])
         (lib.mkIf (toolbox.displayProvider == "x11") [ pkgs.xclip ])
+        (lib.mkIf (toolbox.displayProvider == "wsl") [
+          pkgs.wl-clipboard
+          pkgs.xclip
+        ])
         (lib.mkIf (toolbox.isBash == true) [ pkgs.bash-language-server ])
 
         # Global LSP servers (always on PATH)
