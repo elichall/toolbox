@@ -46,13 +46,13 @@
 
           [[mgr.prepend_keymap]]
           on = "y"
-          run = "yank"
-          desc = "Yank the selected files"
+          run = [ "yank", "copy path" ]
+          desc = "Yank and copy path to system clipboard"
 
           [[mgr.prepend_keymap]]
           on = "x"
-          run = "yank --cut"
-          desc = "Cut the selected files"
+          run = [ "yank --cut", "copy path" ]
+          desc = "Cut and copy path to system clipboard"
 
           [[mgr.prepend_keymap]]
           on = "p"
