@@ -42,7 +42,10 @@
         ]
 
         # nvim dependancy
-        [ pkgs.tree-sitter pkgs.gcc ]
+        [
+          pkgs.tree-sitter
+          pkgs.gcc
+        ]
 
         # Fonts
         [
@@ -53,40 +56,5 @@
 
       fonts.fontconfig.enable = true;
       home.enableNixpkgsReleaseCheck = false;
-
-      # ==========================================================================
-      # PROGRAMS
-      # ==========================================================================
-      programs.zoxide = {
-        enable = true;
-        enableBashIntegration = toolbox.isBash;
-        enableZshIntegration = !toolbox.isBash;
-      };
-
-      programs.fzf = {
-        enable = true;
-        enableBashIntegration = toolbox.isBash;
-        enableZshIntegration = !toolbox.isBash;
-        enableNushellIntegration = false;
-      };
-
-      programs.direnv = {
-        enable = true;
-        enableBashIntegration = toolbox.isBash;
-        enableZshIntegration = !toolbox.isBash;
-        nix-direnv.enable = true;
-        silent = true;
-        stdlib = ''
-          # Load nix-direnv stdlib (provides use_nix, use flake)
-          source ${pkgs.nix-direnv}/share/nix-direnv/direnvrc
-          # Load user lib/*.sh (direnv does not auto-load these)
-          direnv_config_dir_home="''${DIRENV_CONFIG_HOME:-''${XDG_CONFIG_HOME:-$HOME/.config}/direnv}"
-          for lib in "$direnv_config_dir_home/lib/"*.sh; do
-            source "$lib"
-          done
-          unset direnv_config_dir_home
-        '';
-      };
-
     };
 }
