@@ -85,7 +85,7 @@
           os = {
             disabled = false;
             format = "[$symbol]($style) ";
-            style = "bold #74c7ec";
+            style = "bold blue";
             symbols = {
               ${osNames.${toolbox.hostType}} = osSymbols.${toolbox.hostType};
             };

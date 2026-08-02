@@ -5,10 +5,12 @@ if vim.fn.exists("syntax_on") == 1 then
 end
 vim.g.colors_name = "lean_sync"
 
--- Load the static palette safely
-local ok, c = pcall(require, "lean.core.palette")
+-- Load the active palette from the writable theme state dir (nvim config tree is
+-- a read-only store symlink, so the palette can't live inside it)
+local palette_path = vim.env.HOME .. "/.local/share/theme/active/nvim-palette.lua"
+local ok, c = pcall(dofile, palette_path)
 if not ok then
-  return -- Terminates execution if structural layout file is missing
+  return -- Terminates execution if the active palette file is missing
 end
 
 -- Unified high-level utility function

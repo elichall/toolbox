@@ -16,6 +16,7 @@ in {
       self.homeModules.yazi
       self.homeModules.cmdLine
       self.homeModules.nvim
+      self.homeModules.theme
     ];
   };
 }
