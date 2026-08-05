@@ -194,6 +194,7 @@
         apply() {
           local slug="$1"
           local name
+          mkdir -p "$THEME_DIR/active" "$HOME/.config/tmux"
           name=$("$JQ" -r '.name' "$THEME_DIR/palettes/$slug/palette.json")
           "$JQ" -n --arg slug "$slug" --arg name "$name" '{slug: $slug, name: $name}' > "$ACTIVE"
           cp -f "$THEME_DIR/palettes/$slug/nvim.lua"     "$THEME_DIR/active/nvim-palette.lua"
@@ -290,7 +291,10 @@
       # ==========================================================================
       # ACTIVATION — seed state dir + default active theme
       # ==========================================================================
-      home.activation.initTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      # Must run after linkGeneration: the palette files it copies are created
+      # there (home.file). Both entries previously hung off writeBoundary with no
+      # relative ordering, so the copies could race the link creation.
+      home.activation.initTheme = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
         ${pkgs.coreutils}/bin/mkdir -p "${stateDir}/active" "$HOME/.config/tmux"
 
         if [ ! -f "${stateDir}/active.json" ]; then
