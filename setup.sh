@@ -31,6 +31,61 @@ detect_host() {
   esac
 }
 
+# ── Identity: Linux + Windows usernames ──────────────────────────────────────
+
+IDENTITY_FILE="$HOME/.config/toolbox/identity"
+
+load_identity() {
+  # shellcheck disable=SC1090
+  [ -f "$IDENTITY_FILE" ] && . "$IDENTITY_FILE"
+  linux_user="${linux_user:-$USER}"
+  win_user="${win_user:-}"
+}
+
+save_identity() {
+  mkdir -p "$(dirname "$IDENTITY_FILE")"
+  printf 'linux_user=%q\nwin_user=%q\n' "$linux_user" "$win_user" > "$IDENTITY_FILE"
+}
+
+prompt_identity() {
+  local host="$1"
+  local input=""
+
+  load_identity
+
+  info "Identify yourself so the toolbox integrates with this system."
+  printf "Linux username [%s]: " "${linux_user:-$USER}"
+  read -r input
+  linux_user="${input:-${linux_user:-$USER}}"
+
+  if [ "$host" = "wsl" ]; then
+    printf "Windows username (for /mnt/c/Users/... paths) [%s]: " "${win_user:-$linux_user}"
+    read -r input
+    win_user="${input:-${win_user:-$linux_user}}"
+
+    if [ -n "$win_user" ]; then
+      if [ -d "/mnt/c/Users/$win_user" ]; then
+        ok "Windows profile confirmed: /mnt/c/Users/$win_user"
+      else
+        warn "No /mnt/c/Users/$win_user directory found on this machine."
+        printf "Try again [%s] (or blank to skip Windows font install): " "$win_user"
+        read -r input
+        if [ -n "$input" ]; then
+          win_user="$input"
+          [ -d "/mnt/c/Users/$win_user" ] || warn "Still not found — Windows integration may not work"
+        else
+          win_user=""
+          warn "Skipping Windows integration (fonts will not be installed to Windows)"
+        fi
+      fi
+    fi
+  fi
+
+  save_identity
+  info "Using Linux username: $linux_user"
+  [ -n "$win_user" ] && info "Using Windows username: $win_user"
+}
+
 # ── Step 1: Install Nix ─────────────────────────────────────────────────────
 
 install_nix() {
@@ -89,7 +144,8 @@ ensure_unzip() {
 # Resolve the Windows user profile directory. WSL has no env var exposing the
 # Windows username (WSL username != Windows username), so query it through the
 # Windows interop layer: %USERPROFILE% -> wslpath -> /mnt/c/Users/<winuser>.
-# Falls back to assuming the WSL username matches if interop is unavailable.
+# Falls back to the prompted Windows username if interop is unavailable.
+# Returns non-zero if no valid Windows profile can be found.
 resolve_win_home() {
   local profile=""
   if command -v cmd.exe &>/dev/null && command -v wslpath &>/dev/null; then
@@ -100,7 +156,11 @@ resolve_win_home() {
     printf '%s' "$profile"
     return 0
   fi
-  printf '%s' "/mnt/c/Users/$USER"
+  if [ -n "$win_user" ] && [ -d "/mnt/c/Users/$win_user" ]; then
+    printf '%s' "/mnt/c/Users/$win_user"
+    return 0
+  fi
+  return 1
 }
 
 install_windows_fonts() {
@@ -108,7 +168,10 @@ install_windows_fonts() {
 
   local font_dir="$HOME/.nix-profile/share/fonts"
   local win_home
-  win_home="$(resolve_win_home)"
+  if ! win_home="$(resolve_win_home)"; then
+    warn "Could not resolve the Windows user profile — skipping font install"
+    return
+  fi
   info "Windows user profile: $win_home"
   local win_font_dir="$win_home/AppData/Local/Microsoft/Windows/Fonts"
 
@@ -189,15 +252,15 @@ backup_existing_files() {
 
 build_and_activate() {
   local host="$1"
-  local target="homeConfigurations.elichall@${host}.activationPackage"
+  local target="homeConfigurations.${linux_user}@${host}.activationPackage"
 
   backup_existing_files
 
-  info "Building $target..."
-  nix build ".#${target}" --no-link --print-out-paths
+  export TOOLBOX_USER="$linux_user"
 
+  info "Building $target..."
   local result
-  result="$(nix build ".#${target}" --no-link --print-out-paths)"
+  result="$(nix build --impure ".#${target}" --no-link --print-out-paths)"
 
   info "Activating..."
   "$result/activate"
@@ -218,6 +281,8 @@ main() {
 
   info "Detected host: $host"
   echo
+
+  prompt_identity "$host"
 
   install_nix
   enable_flakes
@@ -241,4 +306,7 @@ main() {
   ok "Done. Restart your shell or run: source ~/.bashrc"
 }
 
-main "$@"
+# Only run when executed directly (allows sourcing for tests).
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  main "$@"
+fi

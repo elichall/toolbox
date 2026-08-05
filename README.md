@@ -7,9 +7,58 @@ Drop-in configuration for Wayland Linux, WSL, and macOS.
 
 | Host | Output | System |
 |------|--------|--------|
-| Linux (Wayland) | `elichall@linux` | `x86_64-linux` |
-| WSL | `elichall@wsl` | `x86_64-linux` |
-| macOS | `elichall@macos` | `aarch64-darwin` |
+| Linux (Wayland) | `<user>@linux` | `x86_64-linux` |
+| WSL | `<user>@wsl` | `x86_64-linux` |
+| macOS | `<user>@macos` | `aarch64-darwin` |
+
+The username in each output comes from the `TOOLBOX_USER` environment variable
+(defaults to `elichall`). `setup.sh` prompts for it (plus your Windows username
+on WSL) and passes it to the build automatically.
+
+## Quick start
+
+### Automated (recommended)
+
+```bash
+# Clone and run the setup script — it installs Nix, enables flakes, prompts for
+# your Linux (and, on WSL, Windows) username, then builds and activates.
+git clone git@github.com:elichall/toolbox.git ~/.toolbox
+bash ~/.toolbox/setup.sh
+```
+
+### Manual
+
+```bash
+git clone git@github.com:elichall/toolbox.git ~/toolbox
+cd ~/toolbox
+
+# Build and activate (pick your host)
+export TOOLBOX_USER="$USER"   # or your actual login username
+nix build --impure .#homeConfigurations.$TOOLBOX_USER@wsl.activationPackage
+./result/activate
+```
+
+## Build commands
+
+```bash
+cd ~/toolbox
+
+# The flake reads TOOLBOX_USER (default "elichall"). When building directly,
+# pass --impure and set it to your username:
+export TOOLBOX_USER="$USER"
+
+# Linux (Wayland)
+nix build --impure .#homeConfigurations.$TOOLBOX_USER@linux.activationPackage
+./result/activate
+
+# WSL
+nix build --impure .#homeConfigurations.$TOOLBOX_USER@wsl.activationPackage
+./result/activate
+
+# macOS
+nix build --impure .#homeConfigurations.$TOOLBOX_USER@macos.activationPackage
+./result/activate
+```
 
 ## Prerequisites
 
@@ -39,36 +88,6 @@ unzip -p /tmp/win32yank.zip win32yank.exe | sudo tee /usr/local/bin/win32yank > 
 sudo chmod +x /usr/local/bin/win32yank
 ```
 
-## Quick start
-
-```bash
-# Clone
-git clone git@github.com:elichall/toolbox.git ~/toolbox
-cd ~/toolbox
-
-# Build and activate (pick your host)
-nix build .#homeConfigurations.elichall@wsl.activationPackage
-./result/activate
-```
-
-## Build commands
-
-```bash
-cd ~/toolbox
-
-# Linux (Wayland)
-nix build .#homeConfigurations.elichall@linux.activationPackage
-./result/activate
-
-# WSL
-nix build .#homeConfigurations.elichall@wsl.activationPackage
-./result/activate
-
-# macOS
-nix build .#homeConfigurations.elichall@macos.activationPackage
-./result/activate
-```
-
 ## Updating
 
 ```bash
@@ -78,7 +97,7 @@ cd ~/toolbox
 nix flake update
 
 # Rebuild and activate
-nix build .#homeConfigurations.elichall@wsl.activationPackage
+nix build --impure .#homeConfigurations.$TOOLBOX_USER@wsl.activationPackage
 ./result/activate
 ```
 
