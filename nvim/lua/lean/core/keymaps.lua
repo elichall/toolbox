@@ -19,6 +19,7 @@ key.set("n", "<leader>q", "<cmd>write!<CR><cmd>quitall!<CR>", { silent = true, d
 -- REGISTER MANIPULATION (Yanking / Deleting to System Clipboard)
 -- ==============================================================================
 key.set({ "n", "v", "x" }, "<leader>y", '"+y', { silent = true, desc = "Yank Selection to System Clipboard" })
+key.set({ "n", "v", "x" }, "<leader>p", '"+p', { silent = true, desc = "Paste From System Clipboard" })
 key.set({ "n", "v", "x" }, "<leader>d", '"+d', { silent = true, desc = "Delete Selection to System Clipboard" })
 
 -- ==============================================================================
