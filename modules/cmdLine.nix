@@ -36,7 +36,7 @@
             grep = "grep --color=auto";
           }
           (lib.mkIf (toolbox.displayProvider == "wsl") {
-            nvim = "clip.exe < /dev/null && nvim";
+            nvim = "win32yank -i < /dev/null && nvim";
           })
         ];
 
