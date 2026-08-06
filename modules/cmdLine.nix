@@ -28,12 +28,17 @@
         historySize = 1000;
         historyFileSize = 2000;
 
-        shellAliases = {
-          ll = "ls -alF --color=auto";
-          la = "ls -A --color=auto";
-          l = "ls -CF --color=auto";
-          grep = "grep --color=auto";
-        };
+        shellAliases = lib.mkMerge [
+          {
+            ll = "ls -alF --color=auto";
+            la = "ls -A --color=auto";
+            l = "ls -CF --color=auto";
+            grep = "grep --color=auto";
+          }
+          (lib.mkIf (toolbox.displayProvider == "wsl") {
+            nvim = "clip.exe < /dev/null && nvim";
+          })
+        ];
 
         bashrcExtra = ''
           if [ -f ~/.nix-profile/etc/profile.d/hm-session-vars.sh ]; then
