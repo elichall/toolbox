@@ -8,10 +8,10 @@
     }:
     let
       osSymbols = {
-        nixos = "❄️ ";
-        ubuntu = " ";
-        arch = "󰣇 ";
-        macos = " ";
+        nixos = "❄️";
+        ubuntu = "";
+        arch = "󰣇";
+        macos = "";
       };
       osNames = {
         nixos = "NixOS";
