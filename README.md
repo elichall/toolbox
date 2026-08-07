@@ -134,3 +134,116 @@ Each host file reads from `self.toolbox.{name}` and produces its own
 `flake.homeConfigurations` output. Adding a new host requires:
 1. A new entry in `modules/toolbox.nix` under `flake.toolbox`
 2. A new file in `modules/host/`
+
+## Using toolbox as a flake dependency
+
+The toolbox doubles as a reusable home-manager module library. Point a flake
+input at it, import its `homeModules.*` outputs, and pass the matching host
+data block via `extraSpecialArgs`.
+
+### Consumer flake
+
+`flake.nix`:
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    import-tree.url = "github:vic/import-tree";
+    toolbox.url = "path:../toolbox";
+  };
+  outputs = inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
+}
+```
+
+Replace `path:../toolbox` with a `git+file:` or `github:` URL when consuming the
+toolbox from a different location.
+
+The module tree must register the home-manager flake outputs — this is what
+enables `flake.homeConfigurations` and `flake.homeModules`:
+
+`modules/_default.nix`:
+
+```nix
+{ inputs, ... }: {
+  imports = [ inputs.home-manager.flakeModules.home-manager ];
+  systems = [ "x86_64-linux" ];
+}
+```
+
+### Host module
+
+`modules/host/ubuntu.nix` — one `homeConfigurations` per target. The inline
+base module **must** set `home.stateVersion`, `home.username`, and
+`home.homeDirectory`: since stateVersion ≥ 20.09 home-manager no longer derives
+them from `$USER`/`$HOME`, so omitting them fails with *"option
+home.homeDirectory was accessed but has no value"*.
+
+```nix
+{ inputs, self, ... }: {
+  flake.homeConfigurations.elichall1 =
+    inputs.home-manager.lib.homeManagerConfiguration {
+      pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;
+      extraSpecialArgs = {
+        toolbox = inputs.toolbox.toolbox.ubuntu;
+      };
+      modules = [
+        {
+          home.stateVersion = "26.05";
+          home.username = "elichall1";
+          home.homeDirectory = "/home/elichall1";
+        }
+        inputs.toolbox.homeModules.basics
+        inputs.toolbox.homeModules.tmux
+        inputs.toolbox.homeModules.yazi
+        inputs.toolbox.homeModules.cmdLine
+        inputs.toolbox.homeModules.nvim
+        inputs.toolbox.homeModules.theme
+        self.homeModules.user
+      ];
+    };
+}
+```
+
+### Your own module
+
+`modules/user.nix` — toolbox `homeModules.*` are plain home-manager modules, so
+your own modules compose alongside them:
+
+```nix
+{ ... }: {
+  flake.homeModules.user = { pkgs, ... }: {
+    programs.home-manager.enable = true; # allows `home-manager switch`
+    targets.genericLinux.enable = true;  # required on non-NixOS Linux (Ubuntu)
+    fonts.fontconfig.enable = true;
+
+    home.packages = with pkgs; [
+      opencode
+    ];
+  };
+}
+```
+
+### Build & notes
+
+```bash
+nix build .#homeConfigurations.elichall1.activationPackage
+./result/activate
+```
+
+- **`extraSpecialArgs.toolbox` is required** — every toolbox module reads host
+  settings (`displayProvider`, `clipboard`, `theme`, …) from it. Use the block
+  matching your host: `inputs.toolbox.toolbox.{ubuntu,wsl,linux,macos}`.
+- `inputs.toolbox.toolbox.*` and `inputs.toolbox.homeModules.*` are plain flake
+  outputs of the toolbox — no extra wiring needed.
+- `inputs` does **not** need to be passed to `extraSpecialArgs`; the toolbox
+  modules bake in what they need (e.g. `theme` resolves its color schemes from
+  the toolbox's own inputs).
+- Keep `home-manager.inputs.nixpkgs.follows = "nixpkgs"` so home-manager and
+  your packages resolve against a single nixpkgs.
+- On non-NixOS Linux, `targets.genericLinux.enable = true` is what makes
+  home-manager integrate with the native system.
