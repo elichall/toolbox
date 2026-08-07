@@ -83,7 +83,9 @@ prompt_identity() {
 
   save_identity
   info "Using Linux username: $linux_user"
-  [ -n "$win_user" ] && info "Using Windows username: $win_user"
+  if [ -n "$win_user" ]; then
+    info "Using Windows username: $win_user"
+  fi
 }
 
 # ── Step 1: Install Nix ─────────────────────────────────────────────────────
