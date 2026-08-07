@@ -67,5 +67,19 @@ in
         default = "rose-pine";
       };
     };
+    ubuntu = {
+      hostType = "ubuntu";
+      enableBlesh = true;
+      isBash = true;
+      displayProvider = "wayland";
+      desktopEnv = "gnome";
+      clipboard = {
+        pasteText = "wl-paste";
+      };
+      theme = {
+        schemes = themeSchemes;
+        default = "rose-pine";
+      };
+    };
   };
 }

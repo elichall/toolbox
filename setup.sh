@@ -18,6 +18,10 @@ detect_host() {
     Linux)
       if grep -qi microsoft /proc/version 2>/dev/null; then
         echo "wsl"
+      elif grep -qi '^ID=nixos' /etc/os-release 2>/dev/null; then
+        echo "linux"
+      elif grep -qi '^ID=ubuntu' /etc/os-release 2>/dev/null; then
+        echo "ubuntu"
       else
         echo "linux"
       fi
