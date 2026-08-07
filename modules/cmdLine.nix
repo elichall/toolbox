@@ -9,9 +9,9 @@
     let
       osSymbols = {
         nixos = "❄️ ";
-        ubuntu = " ";
-        arch = " ";
-        macos = " ";
+        ubuntu = " ";
+        arch = "󰣇 ";
+        macos = " ";
       };
       osNames = {
         nixos = "NixOS";
